@@ -1,0 +1,68 @@
+---
+output: 
+  word_document:
+    reference_docx: word_styles-reference-labels.docx
+---
+
+```{r setup, include=FALSE}
+
+#Instructions on how to use:
+#print the output to 255 but change the source to bypass and the paper to thick2
+#place the label paper upside down and with the top towards the outside
+
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+library(xlsx)
+#read in table types
+bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 5, header=TRUE)
+intensive<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 4, header=TRUE)
+
+#realine the table
+library(tidyr)
+intensive <- intensive %>% 
+  gather(type, sample, Sample1:Sample4)
+
+intensive<-intensive[intensive$type=="Sample1",]
+
+baglabels<-intensive[order(intensive$type,intensive$sample),]
+
+#add bottle number
+baglabels$bottles<-NA
+baglabels$bottles<-ifelse(baglabels$class=="A",ifelse(baglabels$layer=="epi",9,7),ifelse(baglabels$layer=="epi",8,7))
+```
+
+
+```{r echo = FALSE, results = "asis"}
+#try this: https://stackoverflow.com/questions/36674824/use-loop-to-generate-section-of-text-in-rmarkdown
+
+template1 <- "SampleID: %s\n
+Name: %s\n
+Type: %s, class %s\n
+%s, %s bottles\n
+..............................\n
+\n" # dont't forget the newline
+
+template2 <- "SampleID: %s\n
+Name: %s\n
+Type: %s, class %s\n
+%s, %s bottles\n
+\n" # dont't forget the newline
+
+
+
+
+for (i in seq(nrow(baglabels))) {
+  current <- baglabels[i, ]
+  #use template 2 for every 10 records (includes a line break) and template 1 for all others
+  j<-i/10
+  if(j%%1==0){
+    cat(sprintf(template2, current$sample, current$Lake, current$layer,current$class,current$type,current$bottles))
+    }
+  
+  if(j%%1!=0){
+    cat(sprintf(template1, current$sample, current$Lake, current$layer,current$class,current$type,current$bottles))
+    }
+  }
+```

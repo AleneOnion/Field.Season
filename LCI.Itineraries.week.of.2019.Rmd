@@ -1,0 +1,100 @@
+---
+output: 
+  word_document:
+    reference_docx: word_styles-reference-itineraries.docx
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+library(xlsx)
+library(dplyr)
+
+#read in table types
+time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 3, header=TRUE,detectDates = FALSE)
+access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 2, header=TRUE)
+float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 7, header=TRUE)
+
+#restrict and merge the tables
+access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor','hours')])
+time$NA.<-NULL
+itinerary<-merge(time,access,by=c('Lake'),all=TRUE)
+itinerary<-merge(itinerary,float,by=c('basin','Trip','team','Day'),all = TRUE)
+rm(list=c('access','time','float'))
+itinerary$needs.big.boat<-ifelse(is.na(itinerary$needs.big.boat),"No",itinerary$needs.big.boat)
+itinerary$motor<-ifelse(is.na(itinerary$motor),"No",itinerary$motor)
+itinerary$hours<-ifelse(is.na(itinerary$hours),itinerary$time,itinerary$hours)
+itinerary<-itinerary %>% 
+  arrange(Trip,basin,team,Day,Order)
+itinerary<-itinerary[!is.na(itinerary$basin),]
+itinerary$Time<-gsub("1899-12-30 ","",itinerary$Time)
+itinerary$time.to.drive.to.next<-gsub("1899-12-30 ","",itinerary$time.to.drive.to.next)
+itinerary$Trip.Total<-gsub("1899-12-31 ","",itinerary$Trip.Total)
+itinerary$Day.Total<-gsub("1899-12-30 ","",itinerary$Day.Total)
+
+#restrict to only a portion of the itineraries
+itinerary<-itinerary[itinerary$basin=="Long Island",]
+itinerary<-itinerary[itinerary$Trip=="1",]
+itinerary<-itinerary %>% 
+  arrange(Trip,basin,team,Day,Order)
+
+```
+
+
+```{r echo = FALSE, results = "asis", message=FALSE, warning=FALSE}
+#try this: https://stackoverflow.com/questions/36674824/use-loop-to-generate-section-of-text-in-rmarkdown
+
+template1 <- "##     page break\n
+______________________________________________________________________________________\n
+Trip: %s - Trip %s - Team %s\n
+Time to travel to first site: %s\n
+Trip total time: %s\n
+These locations are stored on google map:\n
+ https://tinyurl.com/y5eku8cg \n
+\n
+\n" 
+
+template2 <- "......................................................................................\n
+Day: %s (total time needed for the day: %s)\n
+Team: %s, %s\n
+Lake: %s (class %s)\n
+Access location: %s, %s || Deep Hole: %s,%s\n
+QC Sample to collect: %s\n
+Estimated Sampling Time: %s hours || Estimated time to travel to the next site: %s\n
+Does it need a big boat: %s || Motor specifications: %s\n
+Access Information: %s\n
+\n
+\n" # dont't forget the newline
+
+template3 <- "......................................................................................\n
+Day: %s (total time needed for the day: %s)\n
+%s\n
+Estimated 30 min to ship samples at UPS store and no time to travel to the hotel. \n
+Time to next: %s\n
+\n
+\n" # dont't forget the newline
+
+
+
+
+for (i in seq(nrow(itinerary))) {
+  current <- itinerary[i, ]
+  #use template 2 for every 10 records (includes a line break) and template 1 for all others
+  if(is.na(current$class)){
+    if(current$Lake=="Start"){
+        cat(sprintf(template1, current$basin, current$Trip,current$team,current$time.to.drive.to.next,current$Trip.Total))
+    }
+    if(current$Lake!="Start"){
+        cat(sprintf(template3, current$Day,current$Day.Total,current$Lake,current$time.to.drive.to.next))
+    }
+    }
+  
+  if(!is.na(current$class)){
+      cat(sprintf(template2, current$Day,current$Day.Total,current$Crew.Leader,current$Crew.Members,current$Lake, current$class,current$access.site_lat,current$access.site_lon,current$Y_Coordinate,
+                  current$X_Coordinate,current$QC,current$hours, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access))
+    }
+  }
+```

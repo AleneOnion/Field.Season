@@ -1,0 +1,147 @@
+---
+output: 
+  word_document:
+    reference_docx: word_styles-reference-itineraries.docx
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+
+```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+library(xlsx)
+library(dplyr)
+
+#read in table types
+time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 3, header=TRUE,detectDates = FALSE)
+access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 2, header=TRUE)
+contacts<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 6, header=TRUE)
+float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 7, header=TRUE)
+holders<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 6, header=TRUE)
+#rename Crew.Members to holders so can use the phone number list twice
+colnames(holders)[colnames(holders)=="Crew.Leader"]<-"holder1"
+colnames(holders)[colnames(holders)=="phone"]<-"holderphone1"
+#add column for holder 2
+holders2<-holders
+colnames(holders2)[colnames(holders2)=="holder1"]<-"holder2"
+colnames(holders2)[colnames(holders2)=="holderphone1"]<-"holderphone2"
+
+
+#restrict and merge the tables
+access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor','hours')])
+time$NA.<-NULL
+sampling<-merge(time,access,by=c('Lake'),all=TRUE)
+sampling<-merge(sampling,float,by=c('basin','Trip','team','Day'),all = TRUE)
+sampling<-merge(sampling,contacts,by=c('Crew.Leader'),all.x=TRUE)
+sampling<-merge(sampling,holders,by=c('holder1'),all.x=TRUE)
+sampling<-merge(sampling,holders2,by=c('holder2'),all.x=TRUE)
+rm(list=c('access','time','float','contacts','holders'))
+
+sampling<-sampling[!is.na(sampling$basin),]
+sampling$Time<-gsub("1899-12-30 ","",sampling$Time)
+sampling$hours<-gsub("1899-12-30 ","",sampling$hours)
+sampling$time.to.drive.to.next<-gsub("1899-12-30 ","",sampling$time.to.drive.to.next)
+sampling$Trip.Total<-gsub("1899-12-31 ","",sampling$Trip.Total)
+sampling$Day.Total<-gsub("1899-12-30 ","",sampling$Day.Total)
+
+
+sampling$needs.big.boat<-ifelse(is.na(sampling$needs.big.boat),"No",sampling$needs.big.boat)
+sampling$motor<-ifelse(is.na(sampling$motor),"No",sampling$motor)
+sampling$hours<-ifelse(is.na(sampling$hours),sampling$time,sampling$hours)
+
+#format time
+#function to convert to decimal hours
+hhmmss2dec <- function(x) {
+  xlist <- strsplit(x,split=":")
+  h <- as.numeric(sapply(xlist,"[",1))
+  m <- as.numeric(sapply(xlist,"[",2))
+  s <- as.numeric(sapply(xlist,"[",3))
+  xdec <- h+(m/60)+(s/60/60)
+  return(xdec)
+}
+#format the time as decimal
+sampling$hours<-hhmmss2dec(sampling$hours)
+sampling$time.to.drive.to.next<-hhmmss2dec(sampling$time.to.drive.to.next)
+
+#add return time
+sampling$Return<-sampling$Departure+(sampling$hours*60*60)
+sampling$startnext<-sampling$Return+(sampling$time.to.drive.to.next*60*60)
+
+#set departure time to previous startnext
+sampling<-sampling %>% 
+  group_by(basin,Trip,team,Day) %>% 
+  mutate(start=lag(startnext,n=1L,default=NA,order_by=Order)) %>% 
+  ungroup()
+sampling$Departure<-if_else(!is.na(sampling$start),sampling$start,sampling$Departure)
+
+#now calcuate the new return time
+sampling$Return<-sampling$Departure+(sampling$hours*60*60)
+
+sampling<-sampling[sampling$basin=="Long Island",]
+sampling<-sampling[sampling$Trip=="1",]
+
+sampling<-sampling %>% 
+  arrange(basin,Trip,team,Day,Order)
+```
+
+```{r echo = FALSE, , results='asis'}
+#try this: https://stackoverflow.com/questions/36674824/use-loop-to-generate-section-of-text-in-rmarkdown
+
+library(knitr)
+
+template1 <- "##     page break\n
+______________________________________________________________________________________\n
+![](data/float.plan.png)\n
+#Crew Info\n
+Crew Leader: %s........Crew Members: %s\n
+Departure Date,Time,Location: %s, Central Office\n
+#Trip Information\n
+\n" 
+
+template2 <- "\n" 
+
+template3 <- "#Boat and Vehicle Information\n"
+template4<-"#On Board Communication and Safety Equipment (in addition to PDFs)\n
+Cell Phone Numbers: %s\n
+Marine Radio: %s, Distress Flag: %s, Distress Light: %s, Smoke/Dye Signals: %s, Flares: %s, Horn: %s, Signal Mirror: %s, Fire Extinguisher(s): %s\n
+Comments: %s\n
+Float plan holder 1: %s, %s\n
+Float plan holder 2: %s, %s\n
+Hotel Information: %s\n
+#*******IF BOATERS ARE OVERDUE, SEE INSTRUCTIONS Below*******
+![](data/float.plan2.png)\n
+"
+
+for (i in seq(nrow(sampling))) {
+  current <- sampling[i, ]
+  if(is.na(current$Time)){
+    cat(sprintf(template1, current$Crew.Leader,current$Crew.Members,current$Departure))
+  }
+  if(!is.na(current$class)){
+    dframe<-unique(current[c('Lake','Y_Coordinate','X_Coordinate','Return')])
+    print(kable(dframe, row.names = FALSE))
+    rm(dframe)
+    cat(sprintf(template2))
+  }
+  if(!is.na(current$Time)&is.na(current$class)){
+    cat(sprintf(template3))
+    dframe<-data.frame(Boat.Type=current$Boat,Manufacturer=current$Manufacturer,Size.Length.Color = current$Size)
+    print(kable(dframe,row.names = FALSE))
+    rm(dframe)
+    cat(sprintf(template2))
+    dframe<-data.frame(Boat.Owner=current$Owner,Vehicle.Description=current$Vehicle)
+    print(kable(dframe,row.names = FALSE))
+    rm(dframe)
+    cat(sprintf(template2))
+    cat(sprintf(template4,current$phone,current$Marine.Radio,current$Distress.Flag,current$Distress.Light,current$Smoke.Dye.Signals,current$Flares,current$Horn,current$Signal.Mirror,current$Fire.Extinguisher.s.,
+                current$Comments,current$holder1,current$holderphone1,current$holder2,current$holderphone2,current$hotel))
+    
+  }
+  
+}
+
+
+```
