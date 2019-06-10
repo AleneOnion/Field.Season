@@ -16,23 +16,23 @@ library(dplyr)
 #read in table types
 time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 3, header=TRUE,detectDates = FALSE)
 access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 2, header=TRUE)
-float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 7, header=TRUE)
+float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 4, header=TRUE)
 
 #restrict and merge the tables
-access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor','hours')])
+access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor')])
 time$NA.<-NULL
 itinerary<-merge(time,access,by=c('Lake'),all=TRUE)
 itinerary<-merge(itinerary,float,by=c('basin','Trip','team','Day'),all = TRUE)
 rm(list=c('access','time','float'))
 itinerary$needs.big.boat<-ifelse(is.na(itinerary$needs.big.boat),"No",itinerary$needs.big.boat)
 itinerary$motor<-ifelse(is.na(itinerary$motor),"No",itinerary$motor)
-itinerary$hours<-ifelse(is.na(itinerary$hours),itinerary$time,itinerary$hours)
 itinerary<-itinerary %>% 
   arrange(Trip,basin,team,Day,Order)
 itinerary<-itinerary[!is.na(itinerary$basin),]
 itinerary$Time<-gsub("1899-12-30 ","",itinerary$Time)
 itinerary$time.to.drive.to.next<-gsub("1899-12-30 ","",itinerary$time.to.drive.to.next)
 itinerary$Trip.Total<-gsub("1899-12-31 ","",itinerary$Trip.Total)
+itinerary$Trip.Total<-gsub("1899-12-30 ","",itinerary$Trip.Total)
 itinerary$Day.Total<-gsub("1899-12-30 ","",itinerary$Day.Total)
 
 #restrict to only a portion of the itineraries
@@ -94,7 +94,7 @@ for (i in seq(nrow(itinerary))) {
   
   if(!is.na(current$class)){
       cat(sprintf(template2, current$Day,current$Day.Total,current$Crew.Leader,current$Crew.Members,current$Lake, current$class,current$access.site_lat,current$access.site_lon,current$Y_Coordinate,
-                  current$X_Coordinate,current$QC,current$hours, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access))
+                  current$X_Coordinate,current$QC,current$Time, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access))
     }
   }
 ```

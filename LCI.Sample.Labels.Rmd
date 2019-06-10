@@ -16,8 +16,8 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 library(xlsx)
 #read in table types
-bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 5, header=TRUE)
-intensive<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 4, header=TRUE)
+bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 6, header=TRUE)
+intensive<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 5, header=TRUE)
 
 #realine the table
 library(tidyr)

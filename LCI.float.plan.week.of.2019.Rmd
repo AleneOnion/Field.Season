@@ -18,9 +18,9 @@ library(dplyr)
 #read in table types
 time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 3, header=TRUE,detectDates = FALSE)
 access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 2, header=TRUE)
-contacts<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 6, header=TRUE)
-float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 7, header=TRUE)
-holders<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 6, header=TRUE)
+contacts<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 7, header=TRUE)
+float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 4, header=TRUE)
+holders<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 7, header=TRUE)
 #rename Crew.Members to holders so can use the phone number list twice
 colnames(holders)[colnames(holders)=="Crew.Leader"]<-"holder1"
 colnames(holders)[colnames(holders)=="phone"]<-"holderphone1"
@@ -38,7 +38,7 @@ sampling<-merge(sampling,float,by=c('basin','Trip','team','Day'),all = TRUE)
 sampling<-merge(sampling,contacts,by=c('Crew.Leader'),all.x=TRUE)
 sampling<-merge(sampling,holders,by=c('holder1'),all.x=TRUE)
 sampling<-merge(sampling,holders2,by=c('holder2'),all.x=TRUE)
-rm(list=c('access','time','float','contacts','holders'))
+rm(list=c('access','time','float','contacts','holders','holders2'))
 
 sampling<-sampling[!is.na(sampling$basin),]
 sampling$Time<-gsub("1899-12-30 ","",sampling$Time)
@@ -67,24 +67,37 @@ sampling$hours<-hhmmss2dec(sampling$hours)
 sampling$time.to.drive.to.next<-hhmmss2dec(sampling$time.to.drive.to.next)
 
 #add return time
-sampling$Return<-sampling$Departure+(sampling$hours*60*60)
-sampling$startnext<-sampling$Return+(sampling$time.to.drive.to.next*60*60)
+sampling$Return<-sampling$Departure
+sampling$startnext<-sampling$Departure
 
-#set departure time to previous startnext
+#organize before racheting
 sampling<-sampling %>% 
-  group_by(basin,Trip,team,Day) %>% 
-  mutate(start=lag(startnext,n=1L,default=NA,order_by=Order)) %>% 
-  ungroup()
-sampling$Departure<-if_else(!is.na(sampling$start),sampling$start,sampling$Departure)
+  arrange(basin,Trip,team,Day,Order)
 
-#now calcuate the new return time
-sampling$Return<-sampling$Departure+(sampling$hours*60*60)
+for (i in seq(nrow(sampling))) {
+  if(is.na(sampling$Time[i])){
+    sampling$startnext[i]<-sampling$Departure[i]+(sampling$time.to.drive.to.next[i]*60*60)
+    startnext<-sampling$startnext[i]
+  }
+  if(!is.na(sampling$Time[i])){
+    sampling$Departure[i]<-startnext
+    sampling$Return[i]<-sampling$Departure[i]+(sampling$hours[i]*60*60)
+    sampling$startnext[i]<-sampling$Return[i]+(sampling$time.to.drive.to.next[i]*60*60)
+    startnext<-sampling$startnext[i]
+  }
+}
+rm(list=c('startnext','i'))
 
+
+#restrict to long island
 sampling<-sampling[sampling$basin=="Long Island",]
 sampling<-sampling[sampling$Trip=="1",]
 
+#organize
 sampling<-sampling %>% 
   arrange(basin,Trip,team,Day,Order)
+
+rm(hhmmss2dec)
 ```
 
 ```{r echo = FALSE, , results='asis'}
@@ -97,7 +110,7 @@ ________________________________________________________________________________
 ![](data/float.plan.png)\n
 #Crew Info\n
 Crew Leader: %s........Crew Members: %s\n
-Departure Date,Time,Location: %s, Central Office\n
+Departure Date,Time,Location: %s, %s\n
 #Trip Information\n
 \n" 
 
@@ -118,7 +131,7 @@ Hotel Information: %s\n
 for (i in seq(nrow(sampling))) {
   current <- sampling[i, ]
   if(is.na(current$Time)){
-    cat(sprintf(template1, current$Crew.Leader,current$Crew.Members,current$Departure))
+    cat(sprintf(template1, current$Crew.Leader,current$Crew.Members,current$Departure,current$from))
   }
   if(!is.na(current$class)){
     dframe<-unique(current[c('Lake','Y_Coordinate','X_Coordinate','Return')])
