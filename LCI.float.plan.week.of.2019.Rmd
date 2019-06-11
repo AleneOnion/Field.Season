@@ -31,7 +31,7 @@ colnames(holders2)[colnames(holders2)=="holderphone1"]<-"holderphone2"
 
 
 #restrict and merge the tables
-access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor','hours')])
+access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor')])
 time$NA.<-NULL
 sampling<-merge(time,access,by=c('Lake'),all=TRUE)
 sampling<-merge(sampling,float,by=c('basin','Trip','team','Day'),all = TRUE)
@@ -42,7 +42,6 @@ rm(list=c('access','time','float','contacts','holders','holders2'))
 
 sampling<-sampling[!is.na(sampling$basin),]
 sampling$Time<-gsub("1899-12-30 ","",sampling$Time)
-sampling$hours<-gsub("1899-12-30 ","",sampling$hours)
 sampling$time.to.drive.to.next<-gsub("1899-12-30 ","",sampling$time.to.drive.to.next)
 sampling$Trip.Total<-gsub("1899-12-31 ","",sampling$Trip.Total)
 sampling$Day.Total<-gsub("1899-12-30 ","",sampling$Day.Total)
@@ -50,7 +49,6 @@ sampling$Day.Total<-gsub("1899-12-30 ","",sampling$Day.Total)
 
 sampling$needs.big.boat<-ifelse(is.na(sampling$needs.big.boat),"No",sampling$needs.big.boat)
 sampling$motor<-ifelse(is.na(sampling$motor),"No",sampling$motor)
-sampling$hours<-ifelse(is.na(sampling$hours),sampling$time,sampling$hours)
 
 #format time
 #function to convert to decimal hours
@@ -63,7 +61,7 @@ hhmmss2dec <- function(x) {
   return(xdec)
 }
 #format the time as decimal
-sampling$hours<-hhmmss2dec(sampling$hours)
+sampling$Time<-hhmmss2dec(sampling$Time)
 sampling$time.to.drive.to.next<-hhmmss2dec(sampling$time.to.drive.to.next)
 
 #add return time
@@ -81,7 +79,7 @@ for (i in seq(nrow(sampling))) {
   }
   if(!is.na(sampling$Time[i])){
     sampling$Departure[i]<-startnext
-    sampling$Return[i]<-sampling$Departure[i]+(sampling$hours[i]*60*60)
+    sampling$Return[i]<-sampling$Departure[i]+(sampling$Time[i]*60*60)
     sampling$startnext[i]<-sampling$Return[i]+(sampling$time.to.drive.to.next[i]*60*60)
     startnext<-sampling$startnext[i]
   }
@@ -94,7 +92,7 @@ rm(list=c('startnext','i'))
 #################################################################################################################
 #################################################################################################################
 #restrict to basin/trip combination
-sampling<-sampling[sampling$basin=="Susquehanna",]
+sampling<-sampling[sampling$basin=="Long Island",]
 sampling<-sampling[sampling$Trip=="1",]
 #################################################################################################################
 #################################################################################################################
