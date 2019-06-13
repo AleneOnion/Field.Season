@@ -19,7 +19,7 @@ access<-read.xlsx("data/New York State Office of Information Technology Services
 float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 4, header=TRUE)
 
 #restrict and merge the tables
-access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor')])
+access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor','Depth')])
 time$NA.<-NULL
 itinerary<-merge(time,access,by=c('Lake'),all=TRUE)
 itinerary<-merge(itinerary,float,by=c('basin','Trip','team','Day'),all = TRUE)
@@ -75,7 +75,7 @@ template2 <- "..................................................................
 Day: %s (total time needed for the day: %s)\n
 Team: %s, %s\n
 Lake: %s (class %s)\n
-Access location: %s, %s || Deep Hole: %s,%s\n
+Access location: %s, %s || Deep Hole: %s,%s || Max Depth: %s\n
 QC Sample to collect: %s\n
 Estimated Sampling Time: %s hours || Estimated time to travel to the next site: %s\n
 Does it need a big boat: %s || Motor specifications: %s\n
@@ -108,7 +108,7 @@ for (i in seq(nrow(itinerary))) {
   
   if(!is.na(current$class)){
       cat(sprintf(template2, current$Day,current$Day.Total,current$Crew.Leader,current$Crew.Members,current$Lake, current$class,current$access.site_lat,current$access.site_lon,current$Y_Coordinate,
-                  current$X_Coordinate,current$QC,current$Time, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access))
+                  current$X_Coordinate,current$Depth,current$QC,current$Time, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access))
     }
   }
 ```

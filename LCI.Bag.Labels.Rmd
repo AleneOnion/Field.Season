@@ -24,13 +24,19 @@ library(tidyr)
 intensive <- intensive %>% 
   gather(type, sample, Sample1:Sample4)
 
-intensive<-intensive[intensive$type=="Sample1",]
-
 baglabels<-intensive[order(intensive$type,intensive$sample),]
 
 #add bottle number
 baglabels$bottles<-NA
-baglabels$bottles<-ifelse(baglabels$class=="A",ifelse(baglabels$layer=="epi",9,7),ifelse(baglabels$layer=="epi",8,7))
+baglabels$bottles<-ifelse(baglabels$class=="A"|baglabels$class=="Oneida",ifelse(baglabels$layer=="epi",9,7),ifelse(baglabels$layer=="epi",8,7))
+
+#specifying which to print
+baglabels<-baglabels[baglabels$type=="Sample1",]
+#baglabels<-baglabels[baglabels$Parameter=="Diss TPO4 (in H2SO4)FILTRD"|baglabels$Parameter=="Chl A, Vol Filtered:____________"|
+#  baglabels$Parameter=="DOC (in H2SO4)FILTERED",]
+baglabels<-baglabels[baglabels$basingrouping=="Oneida"|baglabels$basingrouping=="parks",]
+
+baglabels<-baglabels[order(baglabels$type,baglabels$sample),]
 ```
 
 

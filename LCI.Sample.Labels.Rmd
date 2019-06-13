@@ -30,11 +30,10 @@ labels<-labels[!is.na(labels$sample),]
 labels<-labels[!is.na(labels$Parameter),]
 labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
 
-#just printing QA samples
+#specifying which to print
 labels<-labels[labels$type=="Sample1",]
-labels<-labels[labels$class=="A",]
-labels<-labels[labels$layer=="hyp",]
-labels<-labels[labels$Parameter=="DOC (pres H2SO4)",]
+#labels<-labels[labels$Parameter=="Diss TPO4 (in H2SO4)FILTRD"|labels$Parameter=="Chl A, Vol Filtered:____________"|labels$Parameter=="DOC (in H2SO4)FILTERED",]
+labels<-labels[labels$basingrouping=="Oneida"|labels$basingrouping=="parks",]
 labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
 ```
 
@@ -44,30 +43,25 @@ labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
 
 template1 <- "SampleID: %s\n
 Name: %s\n
-##     mm/dd/yyyy  hh:mm\n
-%s\n
-..............................\n
-\n" # dont't forget the newline
+##     mm/dd/yyyy  hh:mm\n" # dont't forget the newline
 
-template2 <- "SampleID: %s\n
-Name: %s\n
-##    mm/dd/yyyy  hh:mm\n
-%s\n
-\n" # dont't forget the newline
+template2 <- "%s\n"
+template3 <- "###%s\n"
 
-
+template4 <- "........................................\n
+\n"
+template5 <- "\n"
 
 
 for (i in seq(nrow(labels))) {
   current <- labels[i, ]
-  #use template 2 for every 10 records (includes a line break) and template 1 for all others
-  j<-i/10
-  if(j%%1==0){
-    cat(sprintf(template2, current$sample, current$Lake, current$Parameter))
+  cat(sprintf(template1, current$sample, current$Lake))
+  if(current$Parameter!="Diss TPO4 (in H2SO4)FILTRD"&&current$Parameter!="Chl A, Vol Filtered:____________"&&current$Parameter!="DOC (in H2SO4)FILTERED"){
+    cat(sprintf(template2,current$Parameter))
     }
-  
-  if(j%%1!=0){
-    cat(sprintf(template1, current$sample, current$Lake, current$Parameter))
+  if(current$Parameter=="Diss TPO4 (in H2SO4)FILTRD"|current$Parameter=="Chl A, Vol Filtered:____________"|current$Parameter=="DOC (in H2SO4)FILTERED"){
+    cat(sprintf(template3,current$Parameter))
     }
+  cat(sprintf(template4))
   }
 ```
