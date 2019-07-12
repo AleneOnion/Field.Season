@@ -14,16 +14,37 @@ library(xlsx)
 library(dplyr)
 
 #read in table types
-time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx", 3, header=TRUE,detectDates = FALSE)
-access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 2, header=TRUE)
-float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.Intensive.xlsx" , 4, header=TRUE)
+time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 3, header=TRUE,detectDates = FALSE)
+access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 2, header=TRUE)
+float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4, header=TRUE)
+bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 5, header=TRUE)
+
+#rename headers
+colnames(bottles)[colnames(bottles)=="Lake"]<-"Lake.short"
+colnames(bottles)[colnames(bottles)=="LAKE"]<-"Lake"
+#realine the table
+library(tidyr)
+bottles <- bottles %>% 
+  gather(type, sample, Sample1:Sample4)
+#truncate
+bottles<-unique(bottles[c('Lake','type','sample','layer')])
+#remove QA samples
+bottles<-bottles[bottles$Lake!="none",]
+#spread
+bottles <- bottles %>% 
+  spread(layer,sample)
+#change type to trip
+bottles$type<-gsub("Sample","",bottles$type)
+colnames(bottles)[colnames(bottles)=="type"]<-"Trip"
+
 
 #restrict and merge the tables
 access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor','Depth')])
 time$NA.<-NULL
 itinerary<-merge(time,access,by=c('Lake'),all=TRUE)
 itinerary<-merge(itinerary,float,by=c('basin','Trip','team','Day'),all = TRUE)
-rm(list=c('access','time','float'))
+itinerary<-merge(itinerary,bottles,by=c('Lake','Trip'))
+rm(list=c('access','time','float','bottles'))
 itinerary$needs.big.boat<-ifelse(is.na(itinerary$needs.big.boat),"No",itinerary$needs.big.boat)
 itinerary$motor<-ifelse(is.na(itinerary$motor),"No",itinerary$motor)
 itinerary<-itinerary %>% 
@@ -42,8 +63,10 @@ itinerary$Day.Total<-gsub("1899-12-30 ","",itinerary$Day.Total)
 #################################################################################################################
 #################################################################################################################
 #restrict to only a portion of the itineraries
-itinerary<-itinerary[itinerary$basin=="Susquehanna",]
-itinerary<-itinerary[itinerary$Trip=="1",]
+itinerary<-itinerary[itinerary$basin=="Parks",]
+itinerary<-itinerary[itinerary$Trip=="2",]
+#itinerary<-itinerary[itinerary$team=="2",]
+#itinerary<-itinerary[itinerary$Day=="3",]
 #################################################################################################################
 #################################################################################################################
 #################################################################################################################
@@ -74,7 +97,7 @@ These locations are stored on google map:\n
 template2 <- "......................................................................................\n
 Day: %s (total time needed for the day: %s)\n
 Team: %s, %s\n
-Lake: %s (class %s)\n
+Lake: %s (class %s; sampleIDs: %s, %s)\n
 Access location: %s, %s || Deep Hole: %s,%s || Max Depth: %s\n
 QC Sample to collect: %s\n
 Estimated Sampling Time: %s hours || Estimated time to travel to the next site: %s\n
@@ -107,7 +130,7 @@ for (i in seq(nrow(itinerary))) {
     }
   
   if(!is.na(current$class)){
-      cat(sprintf(template2, current$Day,current$Day.Total,current$Crew.Leader,current$Crew.Members,current$Lake, current$class,current$access.site_lat,current$access.site_lon,current$Y_Coordinate,
+      cat(sprintf(template2, current$Day,current$Day.Total,current$Crew.Leader,current$Crew.Members,current$Lake, current$class,current$epi,current$hyp,current$access.site_lat,current$access.site_lon,current$Y_Coordinate,
                   current$X_Coordinate,current$Depth,current$QC,current$Time, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access))
     }
   }
