@@ -12,15 +12,15 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
-library(xlsx)
+library(openxlsx)
 library(dplyr)
 
 #read in table types
-time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 3, header=TRUE, detectDates = FALSE)
-access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 2, header=TRUE)
-contacts<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 7, header=TRUE)
-float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4, header=TRUE)
-holders<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 7, header=TRUE)
+time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 3, detectDates = FALSE)
+access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 2)
+contacts<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 7)
+float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4)
+holders<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 7)
 #rename Crew.Members to holders so can use the phone number list twice
 colnames(holders)[colnames(holders)=="Crew.Leader"]<-"holder1"
 colnames(holders)[colnames(holders)=="phone"]<-"holderphone1"
@@ -86,16 +86,18 @@ for (i in seq(nrow(sampling))) {
 }
 rm(list=c('startnext','i'))
 
+#add map id label
+sampling$png<-paste(sampling$Lake,".png",sep="")
 
 
 #################################################################################################################
 #################################################################################################################
 #################################################################################################################
 #restrict to basin/trip combination
-sampling<-sampling[sampling$basin=="Lake Champlain",]
-sampling<-sampling[sampling$Trip=="1",]
-sampling<-sampling[sampling$team=="2",]
-sampling<-sampling[sampling$Day=="3",]
+sampling<-sampling[sampling$basin=="Long Island",]
+sampling<-sampling[sampling$Trip=="4",]
+#sampling<-sampling[sampling$team=="2",]
+#sampling<-sampling[sampling$Day=="3",]
 #################################################################################################################
 #################################################################################################################
 #################################################################################################################

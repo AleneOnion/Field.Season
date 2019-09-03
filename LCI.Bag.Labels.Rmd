@@ -14,10 +14,10 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
-library(xlsx)
+library(openxlsx)
 #read in table types
-bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 6, header=TRUE)
-intensive<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 5, header=TRUE)
+bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 6)
+intensive<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 5)
 
 #realine the table
 library(tidyr)
@@ -36,11 +36,12 @@ baglabels$bottles<-ifelse(baglabels$class=="A"|baglabels$class=="Oneida",ifelse(
 #####################################################################################################################
 #####################################################################################################################
 #specifying which to print
-baglabels<-baglabels[baglabels$type=="Sample2",]
-baglabels<-baglabels[baglabels$basingrouping=="Parks",]
+baglabels<-baglabels[baglabels$type=="Sample4",]
+baglabels<-baglabels[baglabels$basingrouping=="Lower Hudson",]
+#baglabels<-baglabels[baglabels$class=="Oneida",]
 #baglabels<-baglabels[baglabels$Parameter=="TOC (in H2SO4)",]
 #baglabels<-baglabels[baglabels$basingrouping=="QA",]
-#baglabels<-baglabels[baglabels$Lake=="Round Pond",]
+#baglabels<-baglabels[baglabels$Lake=="Muskellunge Lake",]
 #baglabels<-baglabels[baglabels$class=="Oneida",]
 #####################################################################################################################
 #####################################################################################################################
