@@ -14,9 +14,14 @@ library(openxlsx)
 library(dplyr)
 
 #read in table types
-time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 3,detectDates = FALSE)
+time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 3, detectDates = FALSE)
+time$Time<-convertToDateTime(time$Time)
+time$time.to.drive.to.next<-convertToDateTime(time$time.to.drive.to.next)
+time$Trip.Total<-convertToDateTime(time$Trip.Total)
+time$Day.Total<-convertToDateTime(time$Day.Total)
 access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 2)
-float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4)
+float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4, detectDates = FALSE)
+float$Departure<-convertToDateTime(float$Departure)
 bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 5)
 
 #rename headers
@@ -58,6 +63,7 @@ itinerary$Trip.Total<-gsub("1899-12-30 ","",itinerary$Trip.Total)
 itinerary$Day.Total<-gsub("1899-12-30 ","",itinerary$Day.Total)
 
 
+
 #################################################################################################################
 #################################################################################################################
 #################################################################################################################
@@ -65,7 +71,7 @@ itinerary$Day.Total<-gsub("1899-12-30 ","",itinerary$Day.Total)
 #################################################################################################################
 #################################################################################################################
 #restrict to only a portion of the itineraries
-itinerary<-itinerary[itinerary$basin=="Susquehanna",]
+itinerary<-itinerary[itinerary$basin=="Delaware",]
 itinerary<-itinerary[itinerary$Trip=="4",]
 #itinerary<-itinerary[itinerary$team=="2",]
 #itinerary<-itinerary[itinerary$Day=="3",]
@@ -138,5 +144,7 @@ for (i in seq(nrow(itinerary))) {
       cat(sprintf(template2, current$Day,current$Day.Total,current$Crew.Leader,current$Crew.Members,current$Lake, current$class,current$epi,current$hyp,current$access.site_lat,current$access.site_lon,current$Y_Coordinate,
                   current$X_Coordinate,current$Depth,current$QC,current$Time, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access,current$map))
   }
-  }
+}
+
+rm(list=ls())
 ```

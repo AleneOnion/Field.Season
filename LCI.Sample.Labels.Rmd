@@ -38,7 +38,7 @@ labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
 #####################################################################################################################
 #specifying which to print
 labels<-labels[labels$type=="Sample4",]
-labels<-labels[labels$basingrouping=="Lower Hudson",]
+labels<-labels[labels$basingrouping=="Delaware",]
 #labels<-labels[labels$Parameter=="TOC (in H2SO4)",]
 #labels<-labels[labels$Lake=="none",]
 #labels<-labels[labels$sample=="19SUS096",]
@@ -78,5 +78,7 @@ for (i in seq(nrow(labels))) {
     cat(sprintf(template3,current$Parameter))
     }
   cat(sprintf(template4))
-  }
+}
+
+rm(list=ls())
 ```

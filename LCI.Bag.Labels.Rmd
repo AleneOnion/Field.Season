@@ -37,7 +37,7 @@ baglabels$bottles<-ifelse(baglabels$class=="A"|baglabels$class=="Oneida",ifelse(
 #####################################################################################################################
 #specifying which to print
 baglabels<-baglabels[baglabels$type=="Sample4",]
-baglabels<-baglabels[baglabels$basingrouping=="Lower Hudson",]
+baglabels<-baglabels[baglabels$basingrouping=="Delaware",]
 #baglabels<-baglabels[baglabels$class=="Oneida",]
 #baglabels<-baglabels[baglabels$Parameter=="TOC (in H2SO4)",]
 #baglabels<-baglabels[baglabels$basingrouping=="QA",]
@@ -84,5 +84,7 @@ for (i in seq(nrow(baglabels))) {
   if(j%%1!=0){
     cat(sprintf(template1, current$sample, current$Lake, current$layer,current$class,current$type,current$bottles))
     }
-  }
+}
+
+rm(list=ls())
 ```

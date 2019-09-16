@@ -17,9 +17,14 @@ library(dplyr)
 
 #read in table types
 time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 3, detectDates = FALSE)
+time$Time<-convertToDateTime(time$Time)
+time$time.to.drive.to.next<-convertToDateTime(time$time.to.drive.to.next)
+time$Trip.Total<-convertToDateTime(time$Trip.Total)
+time$Day.Total<-convertToDateTime(time$Day.Total)
 access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 2)
 contacts<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 7)
-float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4)
+float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4, detectDates = FALSE)
+float$Departure<-convertToDateTime(float$Departure)
 holders<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 7)
 #rename Crew.Members to holders so can use the phone number list twice
 colnames(holders)[colnames(holders)=="Crew.Leader"]<-"holder1"
@@ -43,6 +48,7 @@ rm(list=c('access','time','float','contacts','holders','holders2'))
 sampling<-sampling[!is.na(sampling$basin),]
 sampling$Time<-gsub("1899-12-30 ","",sampling$Time)
 sampling$time.to.drive.to.next<-gsub("1899-12-30 ","",sampling$time.to.drive.to.next)
+sampling$Trip.Total<-gsub("1899-12-30 ","",sampling$Trip.Total)
 sampling$Trip.Total<-gsub("1899-12-31 ","",sampling$Trip.Total)
 sampling$Day.Total<-gsub("1899-12-30 ","",sampling$Day.Total)
 
@@ -94,7 +100,7 @@ sampling$png<-paste(sampling$Lake,".png",sep="")
 #################################################################################################################
 #################################################################################################################
 #restrict to basin/trip combination
-sampling<-sampling[sampling$basin=="Long Island",]
+sampling<-sampling[sampling$basin=="Delaware",]
 sampling<-sampling[sampling$Trip=="4",]
 #sampling<-sampling[sampling$team=="2",]
 #sampling<-sampling[sampling$Day=="3",]
@@ -159,12 +165,13 @@ for (i in seq(nrow(sampling))) {
     print(kable(dframe,row.names = FALSE))
     rm(dframe)
     cat(sprintf(template2))
-    cat(sprintf(template4,current$phone,current$Marine.Radio,current$Distress.Flag,current$Distress.Light,current$Smoke.Dye.Signals,current$Flares,current$Horn,current$Signal.Mirror,current$Fire.Extinguisher.s.,
-                current$Comments,current$holder1,current$holderphone1,current$holder2,current$holderphone2,current$hotel))
+    cat(sprintf(template4,current$phone,current$Marine.Radio,current$Distress.Flag,current$Distress.Light,current$Smoke.Dye.Signals,current$Flares,current$Horn,current$Signal.Mirror,
+                current$`Fire.Extinguisher(s)`,current$Comments,current$holder1,current$holderphone1,current$holder2,current$holderphone2,current$hotel))
     
   }
   
 }
 
+rm(list=ls())
 
 ```
