@@ -71,7 +71,7 @@ itinerary$Day.Total<-gsub("1899-12-30 ","",itinerary$Day.Total)
 #################################################################################################################
 #################################################################################################################
 #restrict to only a portion of the itineraries
-itinerary<-itinerary[itinerary$basin=="Delaware",]
+itinerary<-itinerary[itinerary$basin=="Oneida",]
 itinerary<-itinerary[itinerary$Trip=="4",]
 #itinerary<-itinerary[itinerary$team=="2",]
 #itinerary<-itinerary[itinerary$Day=="3",]

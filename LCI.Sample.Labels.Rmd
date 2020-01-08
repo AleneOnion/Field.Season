@@ -22,7 +22,7 @@ intensive<-read.xlsx("data/New York State Office of Information Technology Servi
 #realine the table
 library(tidyr)
 intensive <- intensive %>% 
-  gather(type, sample, Sample1:Sample4)
+  gather(type, sample, Sample1:Sample6)
 
 #merge to create a list of labels
 labels<-merge(bottles,intensive,by=c('class','layer'),all=TRUE)
@@ -37,8 +37,8 @@ labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
 #####################################################################################################################
 #####################################################################################################################
 #specifying which to print
-labels<-labels[labels$type=="Sample4",]
-labels<-labels[labels$basingrouping=="Delaware",]
+labels<-labels[labels$type=="Sample6",]
+labels<-labels[labels$basingrouping=="Washington Park",]
 #labels<-labels[labels$Parameter=="TOC (in H2SO4)",]
 #labels<-labels[labels$Lake=="none",]
 #labels<-labels[labels$sample=="19SUS096",]
@@ -71,10 +71,10 @@ template5 <- "\n"
 for (i in seq(nrow(labels))) {
   current <- labels[i, ]
   cat(sprintf(template1, current$sample, current$Lake))
-  if(current$Parameter!="Diss TPO4 (in H2SO4)FILTRD"&&current$Parameter!="Chl A, Vol Filtered:____________"&&current$Parameter!="DOC (in H2SO4)FILTERED"){
+  if(current$Parameter!="Diss TPO4 (in H2SO4)FILTRD"&&current$Parameter!="Chl A, Vol Filtered:____________"&&current$Parameter!="DOC (in H2SO4)FILTERED"&&current$Parameter!="TDS FILTERED"){
     cat(sprintf(template2,current$Parameter))
     }
-  if(current$Parameter=="Diss TPO4 (in H2SO4)FILTRD"|current$Parameter=="Chl A, Vol Filtered:____________"|current$Parameter=="DOC (in H2SO4)FILTERED"){
+  if(current$Parameter=="Diss TPO4 (in H2SO4)FILTRD"|current$Parameter=="Chl A, Vol Filtered:____________"|current$Parameter=="DOC (in H2SO4)FILTERED"|current$Parameter=="TDS FILTERED"){
     cat(sprintf(template3,current$Parameter))
     }
   cat(sprintf(template4))

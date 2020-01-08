@@ -100,8 +100,8 @@ sampling$png<-paste(sampling$Lake,".png",sep="")
 #################################################################################################################
 #################################################################################################################
 #restrict to basin/trip combination
-sampling<-sampling[sampling$basin=="Delaware",]
-sampling<-sampling[sampling$Trip=="4",]
+sampling<-sampling[sampling$basin=="Washington Park",]
+sampling<-sampling[sampling$Trip=="1",]
 #sampling<-sampling[sampling$team=="2",]
 #sampling<-sampling[sampling$Day=="3",]
 #################################################################################################################

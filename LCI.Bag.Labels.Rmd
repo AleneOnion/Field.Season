@@ -36,8 +36,8 @@ baglabels$bottles<-ifelse(baglabels$class=="A"|baglabels$class=="Oneida",ifelse(
 #####################################################################################################################
 #####################################################################################################################
 #specifying which to print
-baglabels<-baglabels[baglabels$type=="Sample4",]
-baglabels<-baglabels[baglabels$basingrouping=="Delaware",]
+baglabels<-baglabels[baglabels$type=="Sample1",]
+baglabels<-baglabels[baglabels$basingrouping=="Washington Park",]
 #baglabels<-baglabels[baglabels$class=="Oneida",]
 #baglabels<-baglabels[baglabels$Parameter=="TOC (in H2SO4)",]
 #baglabels<-baglabels[baglabels$basingrouping=="QA",]
