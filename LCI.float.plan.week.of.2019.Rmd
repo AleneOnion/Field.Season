@@ -2,6 +2,22 @@
 output: 
   word_document:
     reference_docx: word_styles-reference-itineraries.docx
+params:
+  type: 
+    label: "Which Sampling Event"
+    value: Sample2
+    input: select
+    choices: [Sample2,Sample3,Sample4,Sample5]
+  grouping:
+    label: "Which Basin or Grouping"
+    value: Delaware
+    input: select
+    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence]
+  user:
+    label: "Who is generating these files?"
+    value: 'amonion.000'
+    input: select
+    choices: ['amonion.000']
 ---
 
 ```{r setup, include=FALSE}
@@ -12,20 +28,21 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
-library(openxlsx)
+library(readxl)
 library(dplyr)
-
 #read in table types
-time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 3, detectDates = FALSE)
+fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
+time<-read_excel(fieldseason, sheet ="3.Times", detectDates = FALSE)
 time$Time<-convertToDateTime(time$Time)
 time$time.to.drive.to.next<-convertToDateTime(time$time.to.drive.to.next)
 time$Trip.Total<-convertToDateTime(time$Trip.Total)
 time$Day.Total<-convertToDateTime(time$Day.Total)
-access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 2)
-contacts<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 7)
-float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4, detectDates = FALSE)
+
+access<-read_excel(fieldseason, sheet ="2.Sites")
+contacts<-read_excel(fieldseason, sheet ="7.Contacts")
+float<-read_excel(fieldseason, sheet ="4.float.plan", detectDates = FALSE)
 float$Departure<-convertToDateTime(float$Departure)
-holders<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 7)
+holders<-read_excel(fieldseason, sheet ="7Contacts")
 #rename Crew.Members to holders so can use the phone number list twice
 colnames(holders)[colnames(holders)=="Crew.Leader"]<-"holder1"
 colnames(holders)[colnames(holders)=="phone"]<-"holderphone1"
@@ -100,8 +117,8 @@ sampling$png<-paste(sampling$Lake,".png",sep="")
 #################################################################################################################
 #################################################################################################################
 #restrict to basin/trip combination
-sampling<-sampling[sampling$basin=="Washington Park",]
-sampling<-sampling[sampling$Trip=="1",]
+sampling<-sampling[sampling$basin==params$grouping,]
+sampling<-sampling[sampling$Trip==params$type,]
 #sampling<-sampling[sampling$team=="2",]
 #sampling<-sampling[sampling$Day=="3",]
 #################################################################################################################

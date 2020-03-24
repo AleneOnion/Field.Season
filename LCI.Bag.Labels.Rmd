@@ -2,6 +2,22 @@
 output: 
   word_document:
     reference_docx: word_styles-reference-baglabels.docx
+params:
+  type: 
+    label: "Which Sampling Event"
+    value: Sample2
+    input: select
+    choices: [Sample2,Sample3,Sample4,Sample5]
+  grouping:
+    label: "Which Basin or Grouping"
+    value: Delaware
+    input: select
+    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence]
+  user:
+    label: "Who is generating these files?"
+    value: 'amonion.000'
+    input: select
+    choices: ['amonion.000']
 ---
 
 ```{r setup, include=FALSE}
@@ -14,10 +30,11 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
-library(openxlsx)
+library(readxl)
 #read in table types
-bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 6)
-intensive<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 5)
+fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
+bottles<-read_excel(fieldseason, sheet ="6.parameters")
+intensive<-read_excel(fieldseason, sheet ="5.labels")
 
 #realine the table
 library(tidyr)

@@ -2,6 +2,22 @@
 output: 
   word_document:
     reference_docx: word_styles-reference-itineraries.docx
+params:
+  type: 
+    label: "Which Sampling Event"
+    value: Sample2
+    input: select
+    choices: [Sample2,Sample3,Sample4,Sample5]
+  grouping:
+    label: "Which Basin or Grouping"
+    value: Delaware
+    input: select
+    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence]
+  user:
+    label: "Who is generating these files?"
+    value: 'amonion.000'
+    input: select
+    choices: ['amonion.000']
 ---
 
 ```{r setup, include=FALSE}
@@ -10,19 +26,20 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
-library(openxlsx)
 library(dplyr)
-
+library(readxl)
+library(dplyr)
 #read in table types
-time<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 3, detectDates = FALSE)
+fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
+time<-read_excel(fieldseason, sheet ="3.Times", detectDates = FALSE)
 time$Time<-convertToDateTime(time$Time)
 time$time.to.drive.to.next<-convertToDateTime(time$time.to.drive.to.next)
 time$Trip.Total<-convertToDateTime(time$Trip.Total)
 time$Day.Total<-convertToDateTime(time$Day.Total)
-access<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 2)
-float<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx" , 4, detectDates = FALSE)
+access<-read_excel(fieldseason, sheet ="2.Sites")
+float<-read_excel(fieldseason, sheet ="4.float.plan", detectDates = FALSE)
 float$Departure<-convertToDateTime(float$Departure)
-bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 5)
+bottles<-read_excel(fieldseason, sheet ="5.labels")
 
 #rename headers
 colnames(bottles)[colnames(bottles)=="Lake"]<-"Lake.short"

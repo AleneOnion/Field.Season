@@ -2,6 +2,22 @@
 output: 
   word_document:
     reference_docx: word_styles-reference-labels.docx
+params:
+  type: 
+    label: "Which Sampling Event"
+    value: Sample2
+    input: select
+    choices: [Sample2,Sample3,Sample4,Sample5]
+  grouping:
+    label: "Which Basin or Grouping"
+    value: Delaware
+    input: select
+    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence]
+  user:
+    label: "Who is generating these files?"
+    value: 'amonion.000'
+    input: select
+    choices: ['amonion.000']
 ---
 
 ```{r setup, include=FALSE}
@@ -14,15 +30,16 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
-library(openxlsx)
+library(readxl)
 #read in table types
-bottles<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 6)
-intensive<-read.xlsx("data/New York State Office of Information Technology Services/Sampling Season - Documents/LCI.Field.Season.xlsx", 5)
+fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
+bottles<-read_excel(fieldseason, sheet ="6.parameters")
+intensive<-read_excel(fieldseason, sheet ="5.labels")
 
 #realine the table
 library(tidyr)
 intensive <- intensive %>% 
-  gather(type, sample, Sample1:Sample6)
+  gather(type, sample, Sample1:Sample5)
 
 #merge to create a list of labels
 labels<-merge(bottles,intensive,by=c('class','layer'),all=TRUE)
@@ -37,8 +54,8 @@ labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
 #####################################################################################################################
 #####################################################################################################################
 #specifying which to print
-labels<-labels[labels$type=="Sample6",]
-labels<-labels[labels$basingrouping=="Washington Park",]
+labels<-labels[labels$type==params$type,]
+labels<-labels[labels$basingrouping==params$grouping,]
 #labels<-labels[labels$Parameter=="TOC (in H2SO4)",]
 #labels<-labels[labels$Lake=="none",]
 #labels<-labels[labels$sample=="19SUS096",]
