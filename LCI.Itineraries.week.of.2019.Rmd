@@ -17,7 +17,7 @@ params:
     label: "Who is generating these files?"
     value: 'amonion.000'
     input: select
-    choices: ['amonion.000']
+    choices: ['amonion.000','mpkraft']
 ---
 
 ```{r setup, include=FALSE}
