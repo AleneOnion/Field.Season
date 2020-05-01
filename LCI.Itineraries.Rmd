@@ -5,12 +5,12 @@ output:
 params:
   type: 
     label: "Which Sampling Event"
-    value: Sample2
+    value: 1
     input: select
-    choices: [Sample2,Sample3,Sample4,Sample5]
+    choices: [1,2,3,4,5]
   grouping:
     label: "Which Basin or Grouping"
-    value: Delaware
+    value: Genesee
     input: select
     choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence]
   user:
@@ -27,19 +27,19 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 library(dplyr)
-library(readxl)
+library(openxlsx)
 library(dplyr)
 #read in table types
 fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
-time<-read_excel(fieldseason, sheet ="3.Times", detectDates = FALSE)
+time<-read.xlsx(fieldseason,sheet = 3)
 time$Time<-convertToDateTime(time$Time)
 time$time.to.drive.to.next<-convertToDateTime(time$time.to.drive.to.next)
 time$Trip.Total<-convertToDateTime(time$Trip.Total)
 time$Day.Total<-convertToDateTime(time$Day.Total)
-access<-read_excel(fieldseason, sheet ="2.Sites")
-float<-read_excel(fieldseason, sheet ="4.float.plan", detectDates = FALSE)
+access<-read.xlsx(fieldseason, sheet =2)
+float<-read.xlsx(fieldseason, sheet =4, detectDates = FALSE)
 float$Departure<-convertToDateTime(float$Departure)
-bottles<-read_excel(fieldseason, sheet ="5.labels")
+bottles<-read.xlsx(fieldseason, sheet =5)
 
 #rename headers
 colnames(bottles)[colnames(bottles)=="Lake"]<-"Lake.short"
@@ -87,11 +87,9 @@ itinerary$Day.Total<-gsub("1899-12-30 ","",itinerary$Day.Total)
 #################################################################################################################
 #################################################################################################################
 #################################################################################################################
-#restrict to only a portion of the itineraries
-itinerary<-itinerary[itinerary$basin=="Oneida",]
-itinerary<-itinerary[itinerary$Trip=="4",]
-#itinerary<-itinerary[itinerary$team=="2",]
-#itinerary<-itinerary[itinerary$Day=="3",]
+itinerary<-itinerary %>% 
+  filter(Trip==params$type,
+         basin==params$grouping)
 #################################################################################################################
 #################################################################################################################
 #################################################################################################################
@@ -101,7 +99,7 @@ itinerary<-itinerary[itinerary$Trip=="4",]
 
 
 itinerary<-itinerary %>% 
-  arrange(Trip,basin,team,Day,Order)
+  arrange(Crew.Leader,Trip,basin,team,Day,Order)
 
 ```
 

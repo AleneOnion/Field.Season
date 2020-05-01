@@ -5,9 +5,9 @@ output:
 params:
   type: 
     label: "Which Sampling Event"
-    value: Sample2
+    value: Sample1
     input: select
-    choices: [Sample2,Sample3,Sample4,Sample5]
+    choices: [Sample1,Sample2,Sample3,Sample4,Sample5]
   grouping:
     label: "Which Basin or Grouping"
     value: Delaware
@@ -43,9 +43,11 @@ intensive <- intensive %>%
 
 #merge to create a list of labels
 labels<-merge(bottles,intensive,by=c('class','layer'),all=TRUE)
-labels<-labels[!is.na(labels$sample),]
-labels<-labels[!is.na(labels$Parameter),]
-labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
+library(dplyr)
+labels<-labels %>% 
+  filter(!is.na(sample),
+         !is.na(Parameter)) %>% 
+  arrange(type,sample,Parameter) 
 
 #####################################################################################################################
 #####################################################################################################################
@@ -54,12 +56,9 @@ labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
 #####################################################################################################################
 #####################################################################################################################
 #specifying which to print
-labels<-labels[labels$type==params$type,]
-labels<-labels[labels$basingrouping==params$grouping,]
-#labels<-labels[labels$Parameter=="TOC (in H2SO4)",]
-#labels<-labels[labels$Lake=="none",]
-#labels<-labels[labels$sample=="19SUS096",]
-#labels<-labels[labels$Lake=="Duplicate epi"|labels$Lake=="Duplicate hypo",]
+labels<-labels %>% 
+  filter(type==params$type,
+         basingrouping==params$grouping)
 #####################################################################################################################
 #####################################################################################################################
 #####################################################################################################################
@@ -78,7 +77,7 @@ Name: %s\n
 ##     mm/dd/yyyy  hh:mm\n" # dont't forget the newline
 
 template2 <- "%s\n"
-template3 <- "###%s\n"
+template3 <- "### %s\n"
 
 template4 <- "........................................\n
 \n"
@@ -96,6 +95,4 @@ for (i in seq(nrow(labels))) {
     }
   cat(sprintf(template4))
 }
-
-rm(list=ls())
 ```

@@ -7,7 +7,7 @@ params:
     label: "Which Sampling Event"
     value: Sample2
     input: select
-    choices: [Sample2,Sample3,Sample4,Sample5]
+    choices: [Sample1,Sample2,Sample3,Sample4,Sample5]
   grouping:
     label: "Which Basin or Grouping"
     value: Delaware
@@ -39,13 +39,21 @@ intensive<-read_excel(fieldseason, sheet ="5.labels")
 #realine the table
 library(tidyr)
 intensive <- intensive %>% 
-  gather(type, sample, Sample1:Sample4)
+  gather(type, sample, Sample1:Sample5)
 
-baglabels<-intensive[order(intensive$type,intensive$sample),]
+#merge to create a list of baglabels
+baglabels<-merge(bottles,intensive,by=c('class','layer'),all=TRUE)
+library(dplyr)
+baglabels<-baglabels %>% 
+  filter(!is.na(sample),
+         !is.na(Parameter)) %>% 
+  arrange(type,sample,Parameter) %>% 
+  select(class,layer,Parameter,class_layer,matching,matching2,Lake,basingrouping,Lake,short,need,gave,`need#`,type,sample) %>% 
+  group_by(class,layer,class_layer,matching,matching2,Lake,basingrouping,short,type,sample) %>% 
+  summarize(bottles=n()) %>% 
+  ungroup() %>% 
+  arrange(type,sample)
 
-#add bottle number
-baglabels$bottles<-NA
-baglabels$bottles<-ifelse(baglabels$class=="A"|baglabels$class=="Oneida",ifelse(baglabels$layer=="epi",9,7),ifelse(baglabels$layer=="epi",8,7))
 #####################################################################################################################
 #####################################################################################################################
 #####################################################################################################################
@@ -53,13 +61,9 @@ baglabels$bottles<-ifelse(baglabels$class=="A"|baglabels$class=="Oneida",ifelse(
 #####################################################################################################################
 #####################################################################################################################
 #specifying which to print
-baglabels<-baglabels[baglabels$type==params$type,]
-baglabels<-baglabels[baglabels$basingrouping==params$grouping,]
-#baglabels<-baglabels[baglabels$class=="Oneida",]
-#baglabels<-baglabels[baglabels$Parameter=="TOC (in H2SO4)",]
-#baglabels<-baglabels[baglabels$basingrouping=="QA",]
-#baglabels<-baglabels[baglabels$Lake=="Muskellunge Lake",]
-#baglabels<-baglabels[baglabels$class=="Oneida",]
+baglabels<-baglabels %>% 
+  filter(type==params$type,
+         basingrouping==params$grouping)
 #####################################################################################################################
 #####################################################################################################################
 #####################################################################################################################
@@ -78,7 +82,7 @@ template1 <- "SampleID: %s\n
 Name: %s\n
 Type: %s, class %s\n
 %s, %s bottles\n
-## ..............................\n
+ ..............................\n
 \n" # dont't forget the newline
 
 template2 <- "SampleID: %s\n

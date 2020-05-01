@@ -5,12 +5,12 @@ output:
 params:
   type: 
     label: "Which Sampling Event"
-    value: Sample2
+    value: 1
     input: select
-    choices: [Sample2,Sample3,Sample4,Sample5]
+    choices: [1,2,3,4,5]
   grouping:
     label: "Which Basin or Grouping"
-    value: Delaware
+    value: Genesee
     input: select
     choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence]
   user:
@@ -28,21 +28,21 @@ knitr::opts_chunk$set(echo = FALSE)
 
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
-library(readxl)
 library(dplyr)
+library(openxlsx)
 #read in table types
 fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
-time<-read_excel(fieldseason, sheet ="3.Times", detectDates = FALSE)
+time<-read.xlsx(fieldseason,sheet = 3)
 time$Time<-convertToDateTime(time$Time)
 time$time.to.drive.to.next<-convertToDateTime(time$time.to.drive.to.next)
 time$Trip.Total<-convertToDateTime(time$Trip.Total)
 time$Day.Total<-convertToDateTime(time$Day.Total)
 
-access<-read_excel(fieldseason, sheet ="2.Sites")
-contacts<-read_excel(fieldseason, sheet ="7.Contacts")
-float<-read_excel(fieldseason, sheet ="4.float.plan", detectDates = FALSE)
+access<-read.xlsx(fieldseason, sheet =2)
+contacts<-read.xlsx(fieldseason, sheet =7)
+float<-read.xlsx(fieldseason, sheet = 4, detectDates = FALSE)
 float$Departure<-convertToDateTime(float$Departure)
-holders<-read_excel(fieldseason, sheet ="7Contacts")
+holders<-read.xlsx(fieldseason, sheet =7)
 #rename Crew.Members to holders so can use the phone number list twice
 colnames(holders)[colnames(holders)=="Crew.Leader"]<-"holder1"
 colnames(holders)[colnames(holders)=="phone"]<-"holderphone1"
@@ -93,7 +93,7 @@ sampling$startnext<-sampling$Departure
 
 #organize before racheting
 sampling<-sampling %>% 
-  arrange(basin,Trip,team,Day,Order)
+  arrange(Crew.Leader,basin,Trip,team,Day,Order)
 
 for (i in seq(nrow(sampling))) {
   if(is.na(sampling$Time[i])){
@@ -117,8 +117,9 @@ sampling$png<-paste(sampling$Lake,".png",sep="")
 #################################################################################################################
 #################################################################################################################
 #restrict to basin/trip combination
-sampling<-sampling[sampling$basin==params$grouping,]
-sampling<-sampling[sampling$Trip==params$type,]
+sampling<-sampling %>% 
+  filter(basin==params$grouping,
+         Trip==params$type)
 #sampling<-sampling[sampling$team=="2",]
 #sampling<-sampling[sampling$Day=="3",]
 #################################################################################################################
@@ -128,7 +129,7 @@ sampling<-sampling[sampling$Trip==params$type,]
 
 #organize
 sampling<-sampling %>% 
-  arrange(basin,Trip,team,Day,Order)
+  arrange(Crew.Leader,basin,Trip,team,Day,Order) 
 
 rm(hhmmss2dec)
 ```
@@ -141,25 +142,31 @@ library(knitr)
 template1 <- "##     page break\n
 ______________________________________________________________________________________\n
 ![](data/float.plan.png)\n
-#Crew Info\n
+# Crew Info\n
 Crew Leader: %s........Crew Members: %s\n
 Departure Date,Time,Location: %s, %s\n
-#Trip Information\n
+# Trip Information\n
 \n" 
 
 template2 <- "\n" 
 
-template3 <- "#Boat and Vehicle Information\n"
-template4<-"#On Board Communication and Safety Equipment (in addition to PDFs)\n
-Cell Phone Numbers: %s\n
-Marine Radio: %s, Distress Flag: %s, Distress Light: %s, Smoke/Dye Signals: %s, Flares: %s, Horn: %s, Signal Mirror: %s, Fire Extinguisher(s): %s\n
-Comments: %s\n
+template3 <- "# Boat and Vehicle Information\n"
+template4<-"# On Board Communication and Safety Equipment (in addition to PDFs)\n
+Cell Phone Numbers: %s\n"
+template5.1<-"Marine Radio: %s\n "
+template5.2<-"Distress Flag: %s\n "
+template5.3<-"Distress Light: %s\n "
+template5.4<-"Smoke Dye Signals: %s\n "
+template5.5<-"Flares: %s\n "
+template5.6<-"Horn: %s\n "
+template5.7<-"Signal Mirror: %s\n "
+template5.8<-"Fire Extinguisher(s): %s\n "
+template6<-"\n Comments: %s\n
 Float plan holder 1: %s, %s\n
 Float plan holder 2: %s, %s\n
 Hotel Information: %s\n
-#*******IF BOATERS ARE OVERDUE, SEE INSTRUCTIONS Below*******
-![](data/float.plan2.png)\n
-"
+# *******IF BOATERS ARE OVERDUE, SEE INSTRUCTIONS Below*******
+![](data/float.plan2.png)\n"
 
 for (i in seq(nrow(sampling))) {
   current <- sampling[i, ]
@@ -182,13 +189,21 @@ for (i in seq(nrow(sampling))) {
     print(kable(dframe,row.names = FALSE))
     rm(dframe)
     cat(sprintf(template2))
-    cat(sprintf(template4,current$phone,current$Marine.Radio,current$Distress.Flag,current$Distress.Light,current$Smoke.Dye.Signals,current$Flares,current$Horn,current$Signal.Mirror,
-                current$`Fire.Extinguisher(s)`,current$Comments,current$holder1,current$holderphone1,current$holder2,current$holderphone2,current$hotel))
+    cat(sprintf(template4,current$phone))
+    if(!is.na(current$Marine.Radio)){cat(sprintf(template5.1,current$Marine.Radio))}
+    if(!is.na(current$Distress.Flag)){cat(sprintf(template5.2,current$Distress.Flag))}
+    if(!is.na(current$Distress.Light)){cat(sprintf(template5.3,current$Distress.Light))}
+    if(!is.na(current$Smoke.Dye.Signals)){cat(sprintf(template5.4,current$Smoke.Dye.Signals))}
+    if(!is.na(current$Flares)){cat(sprintf(template5.5,current$Flares))}
+    if(!is.na(current$Horn)){cat(sprintf(template5.6,current$Horn))}
+    if(!is.na(current$Signal.Mirror)){cat(sprintf(template5.7,current$Signal.Mirror))}
+    if(!is.na(current$`Fire.Extinguisher(s)`)){cat(sprintf(template5.8,current$`Fire.Extinguisher(s)`))}
+    cat(sprintf(template6,current$Comments,current$holder1,current$holderphone1,current$holder2,current$holderphone2,current$hotel))
     
   }
   
 }
 
-rm(list=ls())
+#rm(list=ls())
 
 ```
