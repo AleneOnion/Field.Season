@@ -12,7 +12,7 @@ params:
     label: "Which Basin or Grouping"
     value: Delaware
     input: select
-    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence]
+    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence, Oneida]
   user:
     label: "Who is generating these files?"
     value: 'amonion.000'

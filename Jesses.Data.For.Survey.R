@@ -15,4 +15,7 @@ intensive<-intensive%>% select(matching,Lake,LAKE,type,sample,layer) %>% filter(
 access<-read.xlsx(fieldseason, sheet =2)
 access<-access %>% select(Lake,X_Coordinate,Y_Coordinate) %>% rename(matching=Lake)
 intensive<-merge(intensive,access,by=c('matching'),all.x = TRUE)
+intensive<-intensive %>% 
+  mutate(X_Coordinate=round(X_Coordinate,digits=4),
+        Y_Coordinate=round(Y_Coordinate,digits=4))
 write.csv(intensive,file='for.jesse.labels.csv',row.names=FALSE)

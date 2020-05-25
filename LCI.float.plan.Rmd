@@ -12,7 +12,7 @@ params:
     label: "Which Basin or Grouping"
     value: Genesee
     input: select
-    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence]
+    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence, Oneida]
   user:
     label: "Who is generating these files?"
     value: 'amonion.000'
@@ -34,6 +34,7 @@ library(openxlsx)
 fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
 time<-read.xlsx(fieldseason,sheet = 3)
 time$Time<-convertToDateTime(time$Time)
+time$Water.Time<-convertToDateTime(time$Water.Time)
 time$time.to.drive.to.next<-convertToDateTime(time$time.to.drive.to.next)
 time$Trip.Total<-convertToDateTime(time$Trip.Total)
 time$Day.Total<-convertToDateTime(time$Day.Total)
@@ -67,6 +68,8 @@ sampling$Time<-gsub("1899-12-30 ","",sampling$Time)
 sampling$time.to.drive.to.next<-gsub("1899-12-30 ","",sampling$time.to.drive.to.next)
 sampling$Trip.Total<-gsub("1899-12-30 ","",sampling$Trip.Total)
 sampling$Trip.Total<-gsub("1899-12-31 ","",sampling$Trip.Total)
+sampling$Water.Time<-gsub("1899-12-30 ","",sampling$Water.Time)
+sampling$Water.Time<-gsub("1899-12-31 ","",sampling$Water.Time)
 sampling$Day.Total<-gsub("1899-12-30 ","",sampling$Day.Total)
 
 
@@ -86,6 +89,8 @@ hhmmss2dec <- function(x) {
 #format the time as decimal
 sampling$Time<-hhmmss2dec(sampling$Time)
 sampling$time.to.drive.to.next<-hhmmss2dec(sampling$time.to.drive.to.next)
+sampling$Water.Time<-hhmmss2dec(sampling$Water.Time)
+
 
 #add return time
 sampling$Return<-sampling$Departure
@@ -139,7 +144,8 @@ rm(hhmmss2dec)
 
 library(knitr)
 
-template1 <- "##     page break\n
+template1 <- "\n
+##     page break\n
 ______________________________________________________________________________________\n
 ![](data/float.plan.png)\n
 # Crew Info\n
@@ -152,15 +158,15 @@ template2 <- "\n"
 
 template3 <- "# Boat and Vehicle Information\n"
 template4<-"# On Board Communication and Safety Equipment (in addition to PDFs)\n
-Cell Phone Numbers: %s\n"
-template5.1<-"Marine Radio: %s\n "
-template5.2<-"Distress Flag: %s\n "
-template5.3<-"Distress Light: %s\n "
-template5.4<-"Smoke Dye Signals: %s\n "
-template5.5<-"Flares: %s\n "
-template5.6<-"Horn: %s\n "
-template5.7<-"Signal Mirror: %s\n "
-template5.8<-"Fire Extinguisher(s): %s\n "
+Cell Phone Numbers: %s\n \n"
+template5.1<-"Marine Radio,\n "
+template5.2<-"Distress Flag,\n "
+template5.3<-"Distress Light,\n "
+template5.4<-"Smoke Dye Signals,\n "
+template5.5<-"Flares,\n "
+template5.6<-"Horn,\n "
+template5.7<-"Signal Mirror,\n "
+template5.8<-"Fire Extinguisher(s),\n "
 template6<-"\n Comments: %s\n
 Float plan holder 1: %s, %s\n
 Float plan holder 2: %s, %s\n
@@ -174,7 +180,7 @@ for (i in seq(nrow(sampling))) {
     cat(sprintf(template1, current$Crew.Leader,current$Crew.Members,current$Departure,current$from))
   }
   if(!is.na(current$class)){
-    dframe<-unique(current[c('Lake','Y_Coordinate','X_Coordinate','Return')])
+    dframe<-unique(current[c('Lake','Y_Coordinate','X_Coordinate','Water.Time','Return')])
     print(kable(dframe, row.names = FALSE))
     rm(dframe)
     cat(sprintf(template2))
@@ -190,14 +196,14 @@ for (i in seq(nrow(sampling))) {
     rm(dframe)
     cat(sprintf(template2))
     cat(sprintf(template4,current$phone))
-    if(!is.na(current$Marine.Radio)){cat(sprintf(template5.1,current$Marine.Radio))}
-    if(!is.na(current$Distress.Flag)){cat(sprintf(template5.2,current$Distress.Flag))}
-    if(!is.na(current$Distress.Light)){cat(sprintf(template5.3,current$Distress.Light))}
-    if(!is.na(current$Smoke.Dye.Signals)){cat(sprintf(template5.4,current$Smoke.Dye.Signals))}
-    if(!is.na(current$Flares)){cat(sprintf(template5.5,current$Flares))}
-    if(!is.na(current$Horn)){cat(sprintf(template5.6,current$Horn))}
-    if(!is.na(current$Signal.Mirror)){cat(sprintf(template5.7,current$Signal.Mirror))}
-    if(!is.na(current$`Fire.Extinguisher(s)`)){cat(sprintf(template5.8,current$`Fire.Extinguisher(s)`))}
+    if(!is.na(current$Marine.Radio)){cat(sprintf(template5.1))}
+    if(!is.na(current$Distress.Flag)){cat(sprintf(template5.2))}
+    if(!is.na(current$Distress.Light)){cat(sprintf(template5.3))}
+    if(!is.na(current$Smoke.Dye.Signals)){cat(sprintf(template5.4))}
+    if(!is.na(current$Flares)){cat(sprintf(template5.5))}
+    if(!is.na(current$Horn)){cat(sprintf(template5.6))}
+    if(!is.na(current$Signal.Mirror)){cat(sprintf(template5.7))}
+    if(!is.na(current$`Fire.Extinguisher(s)`)){cat(sprintf(template5.8))}
     cat(sprintf(template6,current$Comments,current$holder1,current$holderphone1,current$holder2,current$holderphone2,current$hotel))
     
   }
