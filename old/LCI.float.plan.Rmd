@@ -1,6 +1,29 @@
 ---
 output: html_document
+params:
+  type: 
+    label: "Which Sampling Event"
+    value: 5
+    input: select
+    choices: [5,6,7,8,9,10]
+  grouping:
+    label: "Which Basin or Grouping"
+    value: Agawam
+    input: select
+    choices: [Delaware,DWSP2,TMDL,Genesee,Lower Hudson,Oneida,St. Lawrence, Oneida]
+  user:
+    label: "Who is generating these files?"
+    value: 'amonion'
+    input: select
+    choices: ['amonion.000','mpkraft','rmgorney']
 ---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
 
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 library(dplyr)
@@ -119,23 +142,22 @@ rm(hhmmss2dec)
 #try this: https://stackoverflow.com/questions/36674824/use-loop-to-generate-section-of-text-in-rmarkdown
 
 library(knitr)
-library(tidyverse)
-library(DT)
 
 
 template1 <- "\n
+##     page break\n
 ______________________________________________________________________________________\n
 ![](data/float.plan.png)\n
-## Crew Info\n
+# Crew Info\n
 Crew Leader: %s........Crew Members: %s\n
 Departure Date,Time,Location: %s, %s\n
-## Trip Information\n
+# Trip Information\n
 \n" 
 
 template2 <- "\n" 
 
-template3 <- "## Boat and Vehicle Information\n"
-template4<-"## On Board Communication and Safety Equipment\n
+template3 <- "# Boat and Vehicle Information\n"
+template4<-"# On Board Communication and Safety Equipment (in addition to PDFs)\n
 Cell Phone Numbers: %s\n \n"
 template5.1<-"Marine Radio,\n "
 template5.2<-"Distress Flag,\n "
@@ -149,7 +171,7 @@ template6<-"\n Comments: %s\n
 Float plan holder 1: %s, %s\n
 Float plan holder 2: %s, %s\n
 Hotel Information: %s\n
-## *IF BOATERS ARE OVERDUE, SEE INSTRUCTIONS Below*
+# *******IF BOATERS ARE OVERDUE, SEE INSTRUCTIONS Below*******
 ![](data/float.plan2.png)\n"
 
 for (i in seq(nrow(sampling))) {
@@ -158,19 +180,9 @@ for (i in seq(nrow(sampling))) {
     cat(sprintf(template1, current$Crew.Leader,current$Crew.Members,current$Departure,current$from))
   }
   if(!is.na(current$class)){
-    dframe<-current %>% 
-      select(Lake,Y_Coordinate,X_Coordinate,access.site_lat,access.site_lon,Water.Time,Return) %>% 
-      distinct() %>% 
-      rename(lat=Y_Coordinate,
-             lon=X_Coordinate,
-             launch.y=access.site_lat,
-             launch.x=access.site_lon,
-             on_water=Water.Time)
- 
+    dframe<-unique(current[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Water.Time','Return')])
     #options(knitr.table.format = "html") 
-    cat("\n")
     print(kable(dframe, row.names = FALSE))
-    cat("\n")
     rm(dframe)
     cat(sprintf(template2))
   }

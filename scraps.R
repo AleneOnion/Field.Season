@@ -16,3 +16,7 @@ access<-read.xlsx(fieldseason, sheet =2)
 access<-access %>% select(Lake,X_Coordinate,Y_Coordinate) %>% rename(matching=Lake)
 intensive<-merge(intensive,access,by=c('matching'),all.x = TRUE)
 write.csv(intensive,file='for.jesse.labels.csv',row.names=FALSE)
+
+output: 
+  word_document:
+  reference_docx: word_styles-reference-itineraries.docx

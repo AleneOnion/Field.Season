@@ -5,19 +5,19 @@ output:
 params:
   type: 
     label: "Which Sampling Event"
-    value: 1
+    value: 5
     input: select
     choices: [1,2,3,4,5]
   grouping:
     label: "Which Basin or Grouping"
-    value: Genesee
+    value: Agawam
     input: select
-    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence, Oneida]
+    choices: [Delaware,Lower Hudson,Oneida,St. Lawrence, Oneida]
   user:
     label: "Who is generating these files?"
-    value: 'amonion.000'
+    value: 'amonion'
     input: select
-    choices: ['amonion.000','mpkraft']
+    choices: ['amonion','mpkraft']
 ---
 
 ```{r setup, include=FALSE}
@@ -29,8 +29,9 @@ knitr::opts_chunk$set(echo = FALSE)
 library(dplyr)
 library(openxlsx)
 library(dplyr)
+library(gt)
 #read in table types
-fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
+fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/2021.field.season.files/LCI.Field.Season.xlsx",sep="")
 time<-read.xlsx(fieldseason,sheet = 3)
 time$Time<-convertToDateTime(time$Time)
 time$time.to.drive.to.next<-convertToDateTime(time$time.to.drive.to.next)
@@ -41,32 +42,28 @@ float<-read.xlsx(fieldseason, sheet =4, detectDates = FALSE)
 float$Departure<-convertToDateTime(float$Departure)
 bottles<-read.xlsx(fieldseason, sheet =5)
 
+#change type to MonthSampling
+#change sample to Key
+#change layer to InfoType
+#change Lake to LOCATION_ID
+
 #rename headers
-colnames(bottles)[colnames(bottles)=="Lake"]<-"Lake.short"
-colnames(bottles)[colnames(bottles)=="matching"]<-"Lake"
-#realine the table
-library(tidyr)
-bottles <- bottles %>% 
-  gather(type, sample, Sample1:Sample4)
+colnames(bottles)[colnames(bottles)=="SiteID"]<-"LOCATION_ID"
 #truncate
-bottles<-unique(bottles[c('Lake','type','sample','layer')])
+bottles<-unique(bottles[c('LOCATION_ID','MonthSampling','Key','InfoType','QCType')])
 #remove QA samples
-bottles<-bottles[bottles$Lake!="none",]
-bottles<-unique(bottles[c('Lake','type','sample','layer')])
-#spread
-bottles <- bottles %>% 
-  spread(layer,sample)
+bottles<-bottles[bottles$LOCATION_ID!="none",]
+bottles<-unique(bottles[c('LOCATION_ID','MonthSampling','Key','InfoType','QCType')])
 #change type to trip
-bottles$type<-gsub("Sample","",bottles$type)
-colnames(bottles)[colnames(bottles)=="type"]<-"Trip"
+colnames(bottles)[colnames(bottles)=="MonthSampling"]<-"Trip"
 
 
 #restrict and merge the tables
-access<-unique(access[c('Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor','Depth','map')])
+access<-unique(access[c('LOCATION_ID','Lake','Y_Coordinate','X_Coordinate','access.site_lat','access.site_lon','Access','needs.big.boat','motor','Depth','map')])
 time$NA.<-NULL
 itinerary<-merge(time,access,by=c('Lake'),all=TRUE)
 itinerary<-merge(itinerary,float,by=c('basin','Trip','team','Day'),all = TRUE)
-itinerary<-merge(itinerary,bottles,by=c('Lake','Trip'),all=TRUE)
+itinerary<-merge(itinerary,bottles,by=c('LOCATION_ID','Trip'),all=TRUE)
 rm(list=c('access','time','float','bottles'))
 itinerary$needs.big.boat<-ifelse(is.na(itinerary$needs.big.boat),"No",itinerary$needs.big.boat)
 itinerary$motor<-ifelse(is.na(itinerary$motor),"No",itinerary$motor)
@@ -120,13 +117,13 @@ These locations are stored on google map:\n
 template2 <- "......................................................................................\n
 Day: %s (total time needed for the day: %s)\n
 Team: %s, %s\n
-Lake: %s (class %s; sampleIDs: %s, %s)\n
+Lake: %s (class %s)\n
 Access location: %s, %s || Deep Hole: %s,%s || Max Depth: %s\n
-QC Sample to collect: %s\n
 Estimated Sampling Time: %s hours || Estimated time to travel to the next site: %s\n
 Does it need a big boat: %s || Motor specifications: %s\n
 Access Information: %s\n
 map: %s\n
+Samples to be collected:\n
 \n
 \n" # dont't forget the newline
 
@@ -142,9 +139,9 @@ Time to next: %s\n
 
 
 
-
 for (i in seq(nrow(itinerary))) {
   current <- itinerary[i, ]
+  samplecurrent<-itinerary %>% filter(LOCATION_ID==current$LOCATION_ID,Trip==current$Trip) %>% select(Key,InfoType,QCType) %>% distinct()
   #use template 2 for every 10 records (includes a line break) and template 1 for all others
   if(is.na(current$class)){
     if(current$Lake=="Start"){
@@ -156,10 +153,16 @@ for (i in seq(nrow(itinerary))) {
     }
   
   if(!is.na(current$class)){
-      cat(sprintf(template2, current$Day,current$Day.Total,current$Crew.Leader,current$Crew.Members,current$Lake, current$class,current$epi,current$hyp,current$access.site_lat,current$access.site_lon,current$Y_Coordinate,
-                  current$X_Coordinate,current$Depth,current$QC,current$Time, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access,current$map))
+    cat(sprintf(template2, current$Day,current$Day.Total,current$Crew.Leader,current$Crew.Members,current$Lake, current$class,current$access.site_lat,current$access.site_lon,current$Y_Coordinate,current$X_Coordinate,current$Depth,current$Time, current$time.to.drive.to.next, current$needs.big.boat, current$motor, current$Access,current$map))
+    for(j in 1:nrow(samplecurrent)){
+   cat("\n")
+   print(paste(samplecurrent$Key[j],samplecurrent$InfoType[j],samplecurrent$QCType,sep="_"))
+   cat("\n")
+  }
   }
 }
 
-rm(list=ls())
+
+
+#rm(list=ls())
 ```

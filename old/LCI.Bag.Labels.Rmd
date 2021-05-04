@@ -3,7 +3,7 @@ output:
   word_document:
     reference_docx: word_styles-reference-baglabels.docx
 params:
-  type: 
+  Sample: 
     label: "Which Sampling Event"
     value: Sample2
     input: select
@@ -12,7 +12,7 @@ params:
     label: "Which Basin or Grouping"
     value: Delaware
     input: select
-    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence, Oneida]
+    choices: [Delaware,DWSP2,TMDL,Genesee,Lower Hudson,Oneida,St. Lawrence, Oneida,Mohawk]
   user:
     label: "Who is generating these files?"
     value: 'amonion.000'
@@ -62,7 +62,7 @@ baglabels<-baglabels %>%
 #####################################################################################################################
 #specifying which to print
 baglabels<-baglabels %>% 
-  filter(type==params$type,
+  filter(type==params$Sample,
          basingrouping==params$grouping)
 #####################################################################################################################
 #####################################################################################################################
@@ -107,5 +107,5 @@ for (i in seq(nrow(baglabels))) {
     }
 }
 
-rm(list=ls())
+#rm(list=ls())
 ```

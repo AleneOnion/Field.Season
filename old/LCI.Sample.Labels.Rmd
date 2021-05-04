@@ -3,7 +3,7 @@ output:
   word_document:
     reference_docx: word_styles-reference-labels.docx
 params:
-  type: 
+  Sample: 
     label: "Which Sampling Event"
     value: Sample1
     input: select
@@ -12,7 +12,7 @@ params:
     label: "Which Basin or Grouping"
     value: Delaware
     input: select
-    choices: [Delaware,DWSP2,Genesee,Lower Hudson,Oneida,St. Lawrence, Oneida]
+    choices: [Delaware,DWSP2,TMDL,Genesee,Lower Hudson,Oneida,St. Lawrence, Oneida]
   user:
     label: "Who is generating these files?"
     value: 'amonion.000'
@@ -57,7 +57,7 @@ labels<-labels %>%
 #####################################################################################################################
 #specifying which to print
 labels<-labels %>% 
-  filter(type==params$type,
+  filter(type==params$Sample,
          basingrouping==params$grouping)
 #####################################################################################################################
 #####################################################################################################################
@@ -66,6 +66,7 @@ labels<-labels %>%
 #####################################################################################################################
 #####################################################################################################################
 labels<-labels[order(labels$type,labels$sample,labels$Parameter),]
+labels<-labels %>% filter(!is.na(labels$Parameter)) %>% distinct()
 ```
 
 
@@ -87,12 +88,14 @@ template5 <- "\n"
 for (i in seq(nrow(labels))) {
   current <- labels[i, ]
   cat(sprintf(template1, current$sample, current$Lake))
-  if(current$Parameter!="Diss TPO4 (in H2SO4)FILTRD"&&current$Parameter!="Chl A, Vol Filtered:____________"&&current$Parameter!="DOC (in H2SO4)FILTERED"&&current$Parameter!="TDS FILTERED"){
-    cat(sprintf(template2,current$Parameter))
-    }
-  if(current$Parameter=="Diss TPO4 (in H2SO4)FILTRD"|current$Parameter=="Chl A, Vol Filtered:____________"|current$Parameter=="DOC (in H2SO4)FILTERED"|current$Parameter=="TDS FILTERED"){
+  if(current$Parameter=="Diss TPO4 (in H2SO4)FILTRD"|
+     current$Parameter=="Chl A, Vol Filtered:____________"|
+     current$Parameter=="DOC (in H2SO4)FILTERED"){
     cat(sprintf(template3,current$Parameter))
-    }
+  }
+  else{
+    cat(sprintf(template2,current$Parameter))
+  }
   cat(sprintf(template4))
 }
 ```

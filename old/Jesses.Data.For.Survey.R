@@ -1,6 +1,9 @@
 #for Jesse
 
+library(dplyr)
+library(tidyr)
 library(readxl)
+library(openxlsx)
 #read in table types
 fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/LCI.Field.Season.xlsx",sep="")
 bottles<-read_excel(fieldseason, sheet ="6.parameters")
