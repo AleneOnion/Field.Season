@@ -5,7 +5,7 @@ output: html_document
 ```{r, echo=FALSE, results='asis', message=FALSE, warning=FALSE}
 library(dplyr)
 library(openxlsx)
-library(kableExtra)
+#library(kableExtra)
 #read in table types
 fieldseason<-paste("C:/Users/",params$user,"/New York State Office of Information Technology Services/LMAS - LCI/2021.field.season.files/LCI.Field.Season.xlsx",sep="")
 time<-read.xlsx(fieldseason,sheet = 3)
